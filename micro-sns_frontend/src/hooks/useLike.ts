@@ -22,7 +22,7 @@ export function useLike(
         // 좋아요 취소
         await removeLike(currentUserId, postId);
         setIsLiked(false);
-        setLikeCount((prev) => prev - 1);
+        setLikeCount((prev) => Math.max(prev - 1, 0));
       } else {
         // 좋아요 추가
         await addLike(currentUserId, postId);
