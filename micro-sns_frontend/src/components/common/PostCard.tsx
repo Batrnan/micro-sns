@@ -101,18 +101,30 @@ return (
             </div>
 
             {shouldShowFollow && onFollowChange && (
+              <div onClick={(e) => e.stopPropagation()}>
               <FollowButton
                 key={`${post.author_id}-${currentUserId}`}
                 currentUserId={currentUserId}
                 targetUserId={post.author_id}
                 onFollowChange={onFollowChange}
               />
+              </div>
             )}
           </div>
 
           <p className="text-white mt-1 text-[15px] leading-normal whitespace-pre-wrap break-words">
             {post.content}
           </p>
+          {post.image_url && (
+          <div className="mt-3">
+            <img
+              src={`${import.meta.env.VITE_API_URL}${post.image_url}`}
+              alt="post"
+              className="rounded-lg max-h-96 object-cover"
+            />
+          </div>
+        )}
+
 
           {/* Action Buttons */}
           <div className="flex items-center justify-between mt-3 pt-2">

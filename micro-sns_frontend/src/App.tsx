@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { Button } from './components/ui';
 import { createPost, deletePost, updatePost, getLikedPostsByUser } from './lib/api';
 import { useAuthStore } from './stores/auth';
@@ -27,6 +27,9 @@ function App() {
   const [editContent, setEditContent] = useState('');
   const [editLoading, setEditLoading] = useState(false);
   const [sortBy, setSortBy] = useState<'latest' | 'most_liked'>('latest');
+  const [image, setImage] = useState<File | null>(null);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
+
 
   useEffect(() => {
     fetchPosts();
@@ -54,8 +57,12 @@ function App() {
     }
 
     try {
-      await createPost(user.user_id, content);
-      setContent('');
+await createPost(user.user_id, content, image);
+    setContent('');
+    setImage(null);
+        if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
       await fetchPosts();
       showSuccess('게시물이 작성되었습니다.');
     } catch (error) {
@@ -127,6 +134,7 @@ function App() {
       return b.like_count - a.like_count;
     }
   });
+  
 
   return (
     <div className="min-h-screen bg-gray-900">
@@ -145,6 +153,13 @@ function App() {
                   value={content}
                   onChange={(e) => setContent(e.target.value)}
                   rows={3}
+                />
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/*"
+                  onChange={(e) => setImage(e.target.files?.[0] || null)}
+                  className="text-white mt-2"
                 />
                 <div className="flex justify-end mt-3 pt-3 border-t border-gray-800">
                   <Button
@@ -201,6 +216,7 @@ function App() {
                 loadStats: () => user && loadStats(user.user_id),
               }}
               isLikedByUser={likedPostIds.has(post.post_id)}
+                onLikeChanged={() => user && loadLikedPosts(user.user_id)}
             />
           ))}
         </div>

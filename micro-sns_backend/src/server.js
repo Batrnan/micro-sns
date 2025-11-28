@@ -1,6 +1,7 @@
 import 'dotenv/config';
 import express from 'express';
 import cors from 'cors';
+import path from 'path';
 
 import userRouter from './routes/user.routes.js';
 import postRouter from './routes/post.routes.js';
@@ -11,6 +12,8 @@ import followRouter from './routes/follow.routes.js';
 const app = express();
 app.use(cors());
 app.use(express.json());
+
+app.use('/uploads', express.static(path.resolve('uploads')));
 
 // 헬스체크
 app.get('/api/health', async (req, res) => {
@@ -29,7 +32,7 @@ app.use('/api/comments', commentRouter);
 app.use('/api/likes', likeRouter);
 app.use('/api/follows', followRouter);
 
-// 에러 핸들링 (최후)
+// 에러 핸들러
 app.use((err, req, res, next) => {
   console.error(err);
   res.status(500).json({ ok: false, error: 'Internal Server Error' });
@@ -37,5 +40,5 @@ app.use((err, req, res, next) => {
 
 const PORT = Number(process.env.PORT || 3001);
 app.listen(PORT, () => {
-  console.log(`✅ Server running http://localhost:${PORT}`);
+  console.log(`Server running http://localhost:${PORT}`);
 });

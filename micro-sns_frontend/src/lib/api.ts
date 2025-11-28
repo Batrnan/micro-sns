@@ -11,6 +11,7 @@ export interface Post {
   content: string;
   created_at: string;
   like_count: number;
+  image_url?: string | null;
 }
 
 export interface FollowStats {
@@ -30,8 +31,20 @@ export async function getPosts(): Promise<Post[]> {
   return res.data.data;
 }
 
-export async function createPost(user_id: number, content: string) {
-  const res = await api.post('/posts', { user_id, content });
+export async function createPost(
+  user_id: number,
+  content: string,
+  image?: File | null
+) {
+  const formData = new FormData();
+  formData.append("user_id", user_id.toString());
+  formData.append("content", content);
+  if (image) formData.append("image", image);
+
+  const res = await api.post("/posts", formData, {
+    headers: { "Content-Type": "multipart/form-data" },
+  });
+
   return res.data;
 }
 
