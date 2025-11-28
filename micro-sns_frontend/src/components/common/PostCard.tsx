@@ -38,11 +38,11 @@ export function PostCard({
   const [showComments, setShowComments] = useState(false);
   const { likeCount, isLiked, isLoading, toggleLike } = useLike(
     post.post_id,
-    post.like_count,
+    post.like_count ?? 0,   // ← null/undefined일 때 0으로 대체
     currentUserId,
     isLikedByUser
   );
-
+  
   const handleAuthorClick = (e: React.MouseEvent) => {
     e.stopPropagation();
     navigate(`/profile/${post.author_id}`);

@@ -7,6 +7,7 @@ import LoginPage from './pages/LoginPage.tsx';
 import RegisterPage from './pages/RegisterPage.tsx';
 import ProfilePage from './pages/ProfilePage.tsx';
 import { Toaster } from '@/components/ui/sonner';
+import UserPostsPage from './pages/UserPostsPage.tsx';
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
@@ -16,6 +17,7 @@ createRoot(document.getElementById('root')!).render(
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
         <Route path="/profile/:userId" element={<ProfilePage />} />
+        <Route path="/user/:id/posts" element={<UserPostsPage />} />
       </Routes>
       <Toaster position="top-center" />
     </BrowserRouter>

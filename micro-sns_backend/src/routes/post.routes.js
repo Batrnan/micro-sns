@@ -128,4 +128,33 @@ router.get('/feed/:followerId', async (req, res) => {
   }
 });
 
+// 특정 사용자 게시글 조회
+router.get('/user/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const [rows] = await pool.execute(
+      `
+      SELECT 
+        p.post_id,
+        p.content,
+        p.created_at,
+        p.user_id AS author_id,
+        u.name AS author,
+        (SELECT COUNT(*) FROM Likes WHERE post_id = p.post_id) AS like_count
+      FROM Post p
+      JOIN User u ON p.user_id = u.user_id
+      WHERE p.user_id = ?
+      ORDER BY p.created_at DESC
+      `,
+      [id]
+    );
+
+    res.json({ ok: true, data: rows });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ ok: false, error: err.message });
+  }
+});
+
 export default router;

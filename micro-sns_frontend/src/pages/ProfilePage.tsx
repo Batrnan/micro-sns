@@ -11,7 +11,9 @@ import {
   followUser,
   unfollowUser,
   getLikedPostsByUser,
+  getUserInfo,
 } from '@/lib/api';
+
 import { Button } from '@/components/ui/button';
 import { FollowListModal } from '@/components/common/FollowListModal';
 import { DeleteConfirmModal } from '@/components/common/DeleteConfirmModal';
@@ -20,8 +22,6 @@ import { UserAvatar } from '@/components/common/UserAvatar';
 import { PostCard } from '@/components/common/PostCard';
 import { BackIcon } from '@/components/icons';
 import { showError, showSuccess } from '@/lib/utils';
-import { getUserInfo } from '@/lib/api';
-
 
 export default function ProfilePage() {
   const { userId } = useParams<{ userId: string }>();
@@ -35,18 +35,23 @@ export default function ProfilePage() {
     email: string;
     bio?: string;
   } | null>(null);
+
   const [loading, setLoading] = useState(true);
   const [modalOpen, setModalOpen] = useState(false);
   const [modalType, setModalType] = useState<'followers' | 'following'>('followers');
+
   const [followLoading, setFollowLoading] = useState(false);
   const [isFollowingUser, setIsFollowingUser] = useState(false);
   const [stats, setStats] = useState({ following_count: 0, follower_count: 0 });
+
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [deleteTargetId, setDeleteTargetId] = useState<number | null>(null);
   const [deleteLoading, setDeleteLoading] = useState(false);
+
   const [likedPostIds, setLikedPostIds] = useState<Set<number>>(new Set());
-  const [activeTab, setActiveTab] = useState<'posts' | 'liked'>('posts');
   const [likedPosts, setLikedPosts] = useState<Post[]>([]);
+  const [activeTab, setActiveTab] = useState<'posts' | 'liked'>('posts');
+
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [editTargetId, setEditTargetId] = useState<number | null>(null);
   const [editContent, setEditContent] = useState('');
@@ -109,7 +114,6 @@ export default function ProfilePage() {
     setFollowLoading(true);
     const wasFollowing = isFollowingUser;
 
-    // Optimistic update
     setIsFollowingUser(!wasFollowing);
     setStats({
       ...stats,
@@ -123,7 +127,6 @@ export default function ProfilePage() {
         await followUser(currentUser.user_id, profileUser.user_id);
       }
     } catch (error) {
-      // Rollback on error
       setIsFollowingUser(wasFollowing);
       setStats({
         ...stats,
@@ -136,62 +139,52 @@ export default function ProfilePage() {
   };
 
   useEffect(() => {
-    if (userId) {
-      loadProfileData();
-    }
+    if (userId) loadProfileData();
   }, [userId]);
 
-const loadProfileData = async () => {
-  if (!userId) return;
+  const loadProfileData = async () => {
+    if (!userId) return;
 
-  setLoading(true);
-  try {
-    const userIdNum = Number(userId);
+    setLoading(true);
+    try {
+      const userIdNum = Number(userId);
 
-    /** 1) 프로필 정보 로딩 (bio 포함) */
-    const userInfo = await getUserInfo(userIdNum);
-    setProfileUser(userInfo);
+      const userInfo = await getUserInfo(userIdNum);
+      setProfileUser(userInfo);
 
-    /** 2) 게시글 로딩 */
-    const allPosts = await getPosts();
-    const userPosts = allPosts.filter((p) => p.author_id === userIdNum);
-    setPosts(userPosts);
+      const allPosts = await getPosts();
+      const userPosts = allPosts.filter((p) => p.author_id === userIdNum);
+      setPosts(userPosts);
 
-    /** 3) 팔로우 통계 */
-    const followStats = await getFollowStats(userIdNum);
-    setStats(followStats);
+      const followStats = await getFollowStats(userIdNum);
+      setStats(followStats);
 
-    /** 4) 이 프로필을 내가 팔로우 중인지 확인 */
-    if (currentUser && currentUser.user_id !== userIdNum) {
-      const followingList = await getFollowingList(currentUser.user_id);
-      const isFollowing = followingList.some((u) => u.user_id === userIdNum);
-      setIsFollowingUser(isFollowing);
-    }
-
-    /** 5) 좋아요한 게시물 */
-    if (currentUser) {
-      const likedPostsData = await getLikedPostsByUser(currentUser.user_id);
-      setLikedPostIds(new Set(likedPostsData.map((post) => post.post_id)));
-
-      if (currentUser.user_id === userIdNum) {
-        setLikedPosts(likedPostsData);
+      if (currentUser && currentUser.user_id !== userIdNum) {
+        const followingList = await getFollowingList(currentUser.user_id);
+        const following = followingList.some((u) => u.user_id === userIdNum);
+        setIsFollowingUser(following);
       }
+
+      const likedByProfileUser = await getLikedPostsByUser(userIdNum);
+      setLikedPosts(likedByProfileUser);
+
+      if (currentUser) {
+        const myLiked = await getLikedPostsByUser(currentUser.user_id);
+        setLikedPostIds(new Set(myLiked.map((p) => p.post_id)));
+      }
+    } catch (error) {
+      console.error('프로필 데이터 로드 실패:', error);
+    } finally {
+      setLoading(false);
     }
-  } catch (error) {
-    console.error('프로필 데이터 로드 실패:', error);
-  } finally {
-    setLoading(false);
-  }
-};
+  };
 
   const handleStatsClick = (type: 'followers' | 'following') => {
     setModalType(type);
     setModalOpen(true);
   };
 
-  const handleBack = () => {
-    navigate('/');
-  };
+  const handleBack = () => navigate('/');
 
   if (loading) {
     return (
@@ -218,13 +211,11 @@ const loadProfileData = async () => {
 
   return (
     <div className="min-h-screen bg-gray-900">
-      {/* Header */}
       <div className="sticky top-0 z-10 bg-gray-900/80 backdrop-blur-md border-b border-gray-800">
         <div className="max-w-2xl mx-auto px-4 py-3 flex items-center gap-4">
           <button
             onClick={handleBack}
             className="text-white hover:bg-gray-800 rounded-full p-2 transition-colors"
-            aria-label="뒤로 가기"
           >
             <BackIcon />
           </button>
@@ -236,12 +227,9 @@ const loadProfileData = async () => {
       </div>
 
       <div className="max-w-2xl mx-auto">
-        {/* Profile Header */}
         <div className="border-b border-gray-800 pb-4">
-          {/* Cover Image Placeholder */}
           <div className="h-48 bg-gradient-to-r from-blue-600 to-purple-600"></div>
 
-          {/* Profile Info */}
           <div className="px-4">
             <div className="flex justify-between items-start -mt-16 mb-4">
               <div className="border-4 border-gray-900 rounded-full">
@@ -253,20 +241,13 @@ const loadProfileData = async () => {
                   <Button
                     onClick={handleFollowClick}
                     disabled={followLoading}
-                    className={`
-        px-6 py-2 rounded-full font-bold text-sm transition-colors
-        ${
-          isFollowingUser
-            ? 'bg-transparent border-2 border-gray-600 text-gray-300 hover:border-red-600 hover:text-red-500 hover:bg-red-500/10'
-            : 'bg-white text-black hover:bg-gray-200'
-        }
-      `}
+                    className={`px-6 py-2 rounded-full font-bold text-sm transition-colors ${
+                      isFollowingUser
+                        ? 'bg-transparent border-2 border-gray-600 text-gray-300 hover:border-red-600 hover:text-red-500 hover:bg-red-500/10'
+                        : 'bg-white text-black hover:bg-gray-200'
+                    }`}
                   >
-                    {followLoading
-                      ? '...'
-                      : isFollowingUser
-                      ? '팔로잉'
-                      : '팔로우'}
+                    {followLoading ? '...' : isFollowingUser ? '팔로잉' : '팔로우'}
                   </Button>
                 </div>
               )}
@@ -285,68 +266,60 @@ const loadProfileData = async () => {
 
             <div className="mb-4">
               <h2 className="text-2xl font-bold text-white">{profileUser.name}</h2>
-
               <p className="text-gray-400 text-sm">{profileUser.email}</p>
             </div>
 
-            {profileUser.bio && (
-              <p className="text-white mb-4">{profileUser.bio}</p>
-            )}
+            {profileUser.bio && <p className="text-white mb-4">{profileUser.bio}</p>}
 
-            {/* Stats */}
             <div className="flex gap-6 text-sm">
               <button
                 onClick={() => handleStatsClick('following')}
                 className="hover:underline transition-colors"
               >
-                <span className="font-bold text-white">
-                  {stats.following_count}
-                </span>
+                <span className="font-bold text-white">{stats.following_count}</span>
                 <span className="text-gray-400 ml-1">팔로잉</span>
               </button>
+
               <button
                 onClick={() => handleStatsClick('followers')}
                 className="hover:underline transition-colors"
               >
-                <span className="font-bold text-white">
-                  {stats.follower_count}
-                </span>
+                <span className="font-bold text-white">{stats.follower_count}</span>
                 <span className="text-gray-400 ml-1">팔로워</span>
               </button>
             </div>
           </div>
         </div>
 
-        {/* Tabs - Only show for own profile */}
-        {isOwnProfile && (
-          <div className="border-b border-gray-800 flex">
-            <button
-              onClick={() => setActiveTab('posts')}
-              className={`flex-1 py-4 text-center font-semibold transition-colors ${
-                activeTab === 'posts'
-                  ? 'text-white border-b-2 border-blue-500'
-                  : 'text-gray-500 hover:text-gray-300'
-              }`}
-            >
-              내 게시글
-            </button>
-            <button
-              onClick={() => setActiveTab('liked')}
-              className={`flex-1 py-4 text-center font-semibold transition-colors ${
-                activeTab === 'liked'
-                  ? 'text-white border-b-2 border-blue-500'
-                  : 'text-gray-500 hover:text-gray-300'
-              }`}
-            >
-              좋아요한 게시글
-            </button>
-          </div>
-        )}
+        {/* Tabs (모든 사용자 공통) */}
+        <div className="border-b border-gray-800 flex">
+          <button
+            onClick={() => setActiveTab('posts')}
+            className={`flex-1 py-4 text-center font-semibold transition-colors ${
+              activeTab === 'posts'
+                ? 'text-white border-b-2 border-blue-500'
+                : 'text-gray-500 hover:text-gray-300'
+            }`}
+          >
+            게시글
+          </button>
 
-        {/* Posts */}
+          <button
+            onClick={() => setActiveTab('liked')}
+            className={`flex-1 py-4 text-center font-semibold transition-colors ${
+              activeTab === 'liked'
+                ? 'text-white border-b-2 border-blue-500'
+                : 'text-gray-500 hover:text-gray-300'
+            }`}
+          >
+            좋아요한 게시글
+          </button>
+        </div>
+
+        {/* Posts Rendering */}
         <div className="divide-y divide-gray-800">
-          {activeTab === 'posts' ? (
-            posts.length === 0 ? (
+          {activeTab === 'posts' &&
+            (posts.length === 0 ? (
               <div className="text-center py-20 text-gray-500">
                 <p className="text-xl">아직 게시물이 없습니다</p>
               </div>
@@ -364,12 +337,17 @@ const loadProfileData = async () => {
                   />
                 </div>
               ))
-            )
-          ) : (
-            likedPosts.length === 0 ? (
+            ))}
+
+          {activeTab === 'liked' &&
+            (likedPosts.length === 0 ? (
               <div className="text-center py-20 text-gray-500">
                 <p className="text-xl">좋아요한 게시물이 없습니다</p>
-                <p className="mt-2">마음에 드는 게시물에 좋아요를 눌러보세요!</p>
+                {!isOwnProfile && (
+                  <p className="mt-2 text-gray-600">
+                    이 사용자는 아직 게시물에 좋아요를 누르지 않았습니다.
+                  </p>
+                )}
               </div>
             ) : (
               likedPosts.map((post) => (
@@ -381,16 +359,14 @@ const loadProfileData = async () => {
                     showEditButton={currentUser?.user_id === post.author_id}
                     onDelete={handleDeleteClick}
                     onEdit={handleEditClick}
-                    isLikedByUser={true}
+                    isLikedByUser={likedPostIds.has(post.post_id)}
                   />
                 </div>
               ))
-            )
-          )}
+            ))}
         </div>
       </div>
 
-      {/* Follow List Modal */}
       <FollowListModal
         isOpen={modalOpen}
         onClose={() => setModalOpen(false)}
@@ -405,6 +381,7 @@ const loadProfileData = async () => {
         onConfirm={handleDeleteConfirm}
         loading={deleteLoading}
       />
+
       <EditPostModal
         isOpen={editModalOpen}
         onClose={() => setEditModalOpen(false)}

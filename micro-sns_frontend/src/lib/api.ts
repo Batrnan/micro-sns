@@ -169,3 +169,9 @@ export async function getUserInfo(user_id: number) {
   const res = await api.get(`/users/${user_id}`);
   return res.data.user;
 }
+
+// 특정 사용자 게시글 보기
+export async function getPostsByUser(user_id: number): Promise<Post[]> {
+  const res = await api.get(`/posts/user/${user_id}`);
+  return res.data.data;
+}
