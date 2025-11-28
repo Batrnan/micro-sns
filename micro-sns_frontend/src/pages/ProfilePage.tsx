@@ -20,6 +20,8 @@ import { UserAvatar } from '@/components/common/UserAvatar';
 import { PostCard } from '@/components/common/PostCard';
 import { BackIcon } from '@/components/icons';
 import { showError, showSuccess } from '@/lib/utils';
+import { getUserInfo } from '@/lib/api';
+
 
 export default function ProfilePage() {
   const { userId } = useParams<{ userId: string }>();
@@ -282,9 +284,9 @@ const loadProfileData = async () => {
             </div>
 
             <div className="mb-4">
-              <h2 className="text-2xl font-bold text-white">
-                {profileUser.name}
-              </h2>
+              <h2 className="text-2xl font-bold text-white">{profileUser.name}</h2>
+
+              <p className="text-gray-400 text-sm">{profileUser.email}</p>
             </div>
 
             {profileUser.bio && (
