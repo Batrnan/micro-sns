@@ -1,9 +1,6 @@
 import { useState } from 'react';
 import { getPosts, type Post } from '@/lib/api';
 
-/**
- * 게시물 목록 관리를 위한 커스텀 훅
- */
 export function usePostActions() {
   const [posts, setPosts] = useState<Post[]>([]);
   const [loading, setLoading] = useState(false);
@@ -11,10 +8,11 @@ export function usePostActions() {
   const fetchPosts = async () => {
     setLoading(true);
     try {
-      const data = await getPosts();
-      setPosts(data);
+      const postsArray = await getPosts();  // 이게 무조건 Post[]임
+      setPosts(postsArray);
     } catch (error) {
       console.error('게시물 로드 실패:', error);
+      setPosts([]);  // 실패해도 배열로 고정
     } finally {
       setLoading(false);
     }

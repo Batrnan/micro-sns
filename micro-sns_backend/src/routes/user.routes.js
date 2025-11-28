@@ -55,4 +55,27 @@ router.post('/login', async (req, res) => {
   }
 });
 
+/** 사용자 프로필 정보 조회 */
+router.get('/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const [rows] = await pool.execute(
+      `SELECT user_id, name, email, bio, created_at
+       FROM User
+       WHERE user_id = ?`,
+      [id]
+    );
+
+    if (rows.length === 0) {
+      return res.status(404).json({ ok: false, error: 'User not found' });
+    }
+
+    res.json({ ok: true, user: rows[0] });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ ok: false, error: err.message });
+  }
+});
+
 export default router;

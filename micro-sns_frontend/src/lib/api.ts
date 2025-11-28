@@ -163,3 +163,9 @@ export async function deleteComment(comment_id: number) {
   const res = await api.delete(`/comments/${comment_id}`);
   return res.data;
 }
+
+// 특정 사용자 정보 가져오기
+export async function getUserInfo(user_id: number) {
+  const res = await api.get(`/users/${user_id}`);
+  return res.data.user;
+}

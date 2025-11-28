@@ -139,64 +139,48 @@ export default function ProfilePage() {
     }
   }, [userId]);
 
-  const loadProfileData = async () => {
-    if (!userId) return;
+const loadProfileData = async () => {
+  if (!userId) return;
 
-    setLoading(true);
-    try {
-      const userIdNum = Number(userId);
+  setLoading(true);
+  try {
+    const userIdNum = Number(userId);
 
-      // Load posts for this user
-      const allPosts = await getPosts();
-      const userPosts = allPosts.filter((p) => p.author_id === userIdNum);
-      setPosts(userPosts);
+    /** 1) 프로필 정보 로딩 (bio 포함) */
+    const userInfo = await getUserInfo(userIdNum);
+    setProfileUser(userInfo);
 
-      // Get user info from posts or current user
-      if (userPosts.length > 0) {
-        setProfileUser({
-          user_id: userPosts[0].author_id,
-          name: userPosts[0].author,
-          email: '',
-        });
-      } else if (currentUser && currentUser.user_id === userIdNum) {
-        setProfileUser({
-          user_id: currentUser.user_id,
-          name: currentUser.name || '사용자',
-          email: currentUser.email || '',
-        });
-      }
+    /** 2) 게시글 로딩 */
+    const allPosts = await getPosts();
+    const userPosts = allPosts.filter((p) => p.author_id === userIdNum);
+    setPosts(userPosts);
 
-      // Load follow stats
-      const followStats = await getFollowStats(userIdNum);
-      setStats(followStats);
+    /** 3) 팔로우 통계 */
+    const followStats = await getFollowStats(userIdNum);
+    setStats(followStats);
 
-      // Check if current user is following this profile
-      if (currentUser && currentUser.user_id !== userIdNum) {
-        const followingList = await getFollowingList(currentUser.user_id);
-        const isFollowing = followingList.some((u) => u.user_id === userIdNum);
-        setIsFollowingUser(isFollowing);
-      }
-
-      // Load liked posts for current user
-      if (currentUser) {
-        try {
-          const likedPostsData = await getLikedPostsByUser(currentUser.user_id);
-          setLikedPostIds(new Set(likedPostsData.map((post) => post.post_id)));
-
-          // If viewing own profile, also load liked posts for display
-          if (currentUser.user_id === userIdNum) {
-            setLikedPosts(likedPostsData);
-          }
-        } catch (error) {
-          console.error('좋아요한 게시글 불러오기 실패:', error);
-        }
-      }
-    } catch (error) {
-      console.error('프로필 데이터 로드 실패:', error);
-    } finally {
-      setLoading(false);
+    /** 4) 이 프로필을 내가 팔로우 중인지 확인 */
+    if (currentUser && currentUser.user_id !== userIdNum) {
+      const followingList = await getFollowingList(currentUser.user_id);
+      const isFollowing = followingList.some((u) => u.user_id === userIdNum);
+      setIsFollowingUser(isFollowing);
     }
-  };
+
+    /** 5) 좋아요한 게시물 */
+    if (currentUser) {
+      const likedPostsData = await getLikedPostsByUser(currentUser.user_id);
+      setLikedPostIds(new Set(likedPostsData.map((post) => post.post_id)));
+
+      if (currentUser.user_id === userIdNum) {
+        setLikedPosts(likedPostsData);
+      }
+    }
+  } catch (error) {
+    console.error('프로필 데이터 로드 실패:', error);
+  } finally {
+    setLoading(false);
+  }
+};
 
   const handleStatsClick = (type: 'followers' | 'following') => {
     setModalType(type);

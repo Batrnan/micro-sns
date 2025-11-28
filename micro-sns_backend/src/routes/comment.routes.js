@@ -3,7 +3,7 @@ import { pool } from '../db.js';
 
 const router = Router();
 
-/** ✅ 댓글 조회 (게시글별) */
+/** 댓글 조회 (게시글별) */
 router.get('/by-post/:postId', async (req, res) => {
   try {
     const { postId } = req.params;
@@ -23,7 +23,7 @@ router.get('/by-post/:postId', async (req, res) => {
   }
 });
 
-/** ✅ 댓글 작성 */
+/** 댓글 작성 */
 router.post('/', async (req, res) => {
   try {
     const { post_id, user_id, content } = req.body;
@@ -45,7 +45,7 @@ router.post('/', async (req, res) => {
   }
 });
 
-/** ✅ 댓글 수정 */
+/** 댓글 수정 */
 router.put('/:commentId', async (req, res) => {
   try {
     const { commentId } = req.params;
@@ -64,7 +64,7 @@ router.put('/:commentId', async (req, res) => {
   }
 });
 
-/** ✅ 댓글 삭제 */
+/** 댓글 삭제 */
 router.delete('/:commentId', async (req, res) => {
   try {
     const { commentId } = req.params;
