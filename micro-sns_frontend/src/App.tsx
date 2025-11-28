@@ -26,7 +26,7 @@ function App() {
   const [editTargetId, setEditTargetId] = useState<number | null>(null);
   const [editContent, setEditContent] = useState('');
   const [editLoading, setEditLoading] = useState(false);
-  const [sortBy, setSortBy] = useState<'latest' | 'most_liked'>('latest');
+  const [sortBy, setSortBy] = useState<'latest' | 'most_liked' | 'trending'>('latest');
   const [image, setImage] = useState<File | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
@@ -196,6 +196,16 @@ await createPost(user.user_id, content, image);
             }`}
           >
             좋아요순
+          </button>
+          <button
+            onClick={() => setSortBy('trending')}
+            className={`flex-1 py-4 text-center font-semibold transition-colors ${
+              sortBy === 'trending'
+                ? 'text-white border-b-2 border-blue-500'
+                : 'text-gray-500 hover:text-gray-300'
+            }`}
+          >
+            트렌딩
           </button>
         </div>
 

@@ -130,8 +130,11 @@ return (
           <div className="flex items-center justify-between mt-3 pt-2">
             <div className="flex items-center gap-1">
               <button
-                onClick={() => setShowComments(!showComments)}
-                className={`flex items-center gap-1 transition-colors group ${
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setShowComments(!showComments);
+                }}
+                  className={`flex items-center gap-1 transition-colors group ${
                   showComments ? 'text-blue-500' : 'text-gray-500 hover:text-blue-500'
                 }`}
               >

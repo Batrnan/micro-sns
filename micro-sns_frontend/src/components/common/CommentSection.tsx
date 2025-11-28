@@ -77,7 +77,10 @@ export function CommentSection({ postId, currentUserId }: CommentSectionProps) {
   }
 
   return (
-    <div className="border-t border-gray-800 pt-3 mt-3">
+        <div
+          className="border-t border-gray-800 pt-3 mt-3"
+          onClick={(e: React.MouseEvent) => e.stopPropagation()}
+        >
       {/* Comment Input */}
       {currentUserId && (
         <form onSubmit={handleSubmit} className="mb-3">

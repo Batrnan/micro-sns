@@ -9,6 +9,7 @@ import ProfilePage from './pages/ProfilePage.tsx';
 import { Toaster } from '@/components/ui/sonner';
 import UserPostsPage from './pages/UserPostsPage.tsx';
 import PostDetailPage from './pages/PostDetailPage.tsx';
+import ChangePasswordPage from './pages/ChangePasswordPage.tsx';
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
@@ -20,6 +21,7 @@ createRoot(document.getElementById('root')!).render(
         <Route path="/profile/:userId" element={<ProfilePage />} />
         <Route path="/user/:id/posts" element={<UserPostsPage />} />
         <Route path="/posts/:postId" element={<PostDetailPage />} />
+        <Route path="/change-password" element={<ChangePasswordPage />} />
       </Routes>
       <Toaster position="top-center" />
     </BrowserRouter>

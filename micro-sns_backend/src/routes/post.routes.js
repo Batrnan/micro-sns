@@ -168,6 +168,35 @@ router.delete('/:postId', async (req, res) => {
     res.status(500).json({ ok: false, error: err.message });
   }
 });
+/** ===========================
+ *  X. 트렌딩 게시글 (좋아요 많은 순)
+ * ===========================
+ */
+router.get('/trending', async (req, res) => {
+  try {
+    const [rows] = await pool.query(`
+      SELECT 
+        p.post_id,
+        u.user_id AS author_id,
+        u.name AS author,
+        p.content,
+        p.created_at,
+        p.image_url,
+        COUNT(l.user_id) AS like_count
+      FROM Post p
+      JOIN User u ON p.user_id = u.user_id
+      LEFT JOIN Likes l ON p.post_id = l.post_id
+      GROUP BY p.post_id
+      ORDER BY like_count DESC, p.created_at DESC
+      LIMIT 30
+    `);
+
+    res.json({ ok: true, data: rows });
+  } catch (err) {
+    console.error("GET /posts/trending ERROR:", err);
+    res.status(500).json({ ok: false, error: err.message });
+  }
+});
 
 /** ===========================
  * 8. 게시글 상세 (마지막에 둬야 충돌 X)

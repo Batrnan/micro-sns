@@ -188,3 +188,26 @@ export async function getPostsByUser(user_id: number): Promise<Post[]> {
   const res = await api.get(`/posts/user/${user_id}`);
   return res.data.data;
 }
+
+export async function getTrendingPosts(): Promise<Post[]> {
+  const res = await api.get('/posts/trending');
+  return res.data.data;
+}
+
+export async function searchUsers(keyword: string) {
+  const res = await api.get(`/users/search?keyword=${keyword}`);
+  return res.data.data;
+}
+
+export async function changePassword(
+  user_id: number,
+  oldPassword: string,
+  newPassword: string
+) {
+  const res = await api.post("/users/change-password", {
+    user_id,
+    oldPassword,
+    newPassword,
+  });
+  return res.data;
+}
