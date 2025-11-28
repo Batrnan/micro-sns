@@ -21,6 +21,8 @@ interface PostCardProps {
     loadStats: () => void;
   };
   isLikedByUser?: boolean;
+  showLikeCount?: boolean;
+  onLikeChanged?: () => void;  
 }
 
 export function PostCard({
@@ -33,6 +35,8 @@ export function PostCard({
   onEdit,
   onFollowChange,
   isLikedByUser = false,
+  showLikeCount = true,
+  onLikeChanged,    
 }: PostCardProps) {
   const navigate = useNavigate();
   const [showComments, setShowComments] = useState(false);
@@ -65,7 +69,8 @@ export function PostCard({
   const handleLikeClick = async (e: React.MouseEvent) => {
     e.stopPropagation();
     if (!currentUserId) return;
-    await toggleLike();
+await toggleLike();
+if (onLikeChanged) onLikeChanged();
   };
 
   const isOwnPost = currentUserId === post.author_id;
@@ -73,9 +78,11 @@ export function PostCard({
   const shouldShowDelete = showDeleteButton && isOwnPost;
   const shouldShowEdit = showEditButton && isOwnPost;
 
-  return (
-    <div className="py-4 transition-colors">
-      <div className="flex gap-3">
+return (
+  <div
+    className="py-4 transition-colors cursor-pointer"
+    onClick={() => navigate(`/posts/${post.post_id}`)}
+  >
         <UserAvatar name={post.author} size="sm" />
 
         <div className="flex-1 min-w-0">
@@ -131,7 +138,9 @@ export function PostCard({
                 <div className="group-hover:bg-red-500/10 rounded-full p-2 transition-colors">
                   <HeartIcon filled={isLiked} />
                 </div>
-                <span className="text-sm">{likeCount}</span>
+{showLikeCount && (
+  <span className="text-sm">{likeCount}</span>
+)}
               </button>
             </div>
 
@@ -164,6 +173,5 @@ export function PostCard({
           )}
         </div>
       </div>
-    </div>
   );
 }

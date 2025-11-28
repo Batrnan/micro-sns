@@ -326,15 +326,15 @@ export default function ProfilePage() {
             ) : (
               posts.map((post) => (
                 <div key={post.post_id} className="px-4">
-                  <PostCard
-                    post={post}
-                    currentUserId={currentUser?.user_id}
-                    showDeleteButton={isOwnProfile}
-                    showEditButton={isOwnProfile}
-                    onDelete={handleDeleteClick}
-                    onEdit={handleEditClick}
-                    isLikedByUser={likedPostIds.has(post.post_id)}
-                  />
+<PostCard
+  post={post}
+  currentUserId={currentUser?.user_id}
+  showDeleteButton={isOwnProfile}
+  showEditButton={isOwnProfile}
+  isLikedByUser={likedPostIds.has(post.post_id)}
+  showLikeCount={true}
+/>
+
                 </div>
               ))
             ))}
@@ -352,15 +352,15 @@ export default function ProfilePage() {
             ) : (
               likedPosts.map((post) => (
                 <div key={post.post_id} className="px-4">
-                  <PostCard
-                    post={post}
-                    currentUserId={currentUser?.user_id}
-                    showDeleteButton={currentUser?.user_id === post.author_id}
-                    showEditButton={currentUser?.user_id === post.author_id}
-                    onDelete={handleDeleteClick}
-                    onEdit={handleEditClick}
-                    isLikedByUser={likedPostIds.has(post.post_id)}
-                  />
+<PostCard
+  post={post}
+  currentUserId={currentUser?.user_id}
+  showDeleteButton={currentUser?.user_id === post.author_id}
+  showEditButton={currentUser?.user_id === post.author_id}
+  isLikedByUser={true}
+  showLikeCount={false}   // 숫자 숨기기
+/>
+
                 </div>
               ))
             ))}
