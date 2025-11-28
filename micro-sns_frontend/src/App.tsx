@@ -1,12 +1,13 @@
 import { useEffect, useState } from 'react';
 import { Button } from './components/ui';
-import { createPost, deletePost } from './lib/api';
+import { createPost, deletePost, updatePost, getLikedPostsByUser } from './lib/api';
 import { useAuthStore } from './stores/auth';
 import { Header } from './components/layout/Header';
 import { UserAvatar } from './components/common/UserAvatar';
 import { PostCard } from './components/common/PostCard';
 import { FollowListModal } from './components/common/FollowListModal';
 import { DeleteConfirmModal } from '@/components/common/DeleteConfirmModal';
+import { EditPostModal } from '@/components/common/EditPostModal';
 import { usePostActions, useFollowStats } from './hooks';
 import { showError, showSuccess } from './lib/utils';
 
@@ -20,13 +21,29 @@ function App() {
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [deleteTargetId, setDeleteTargetId] = useState<number | null>(null);
   const [deleteLoading, setDeleteLoading] = useState(false);
+  const [likedPostIds, setLikedPostIds] = useState<Set<number>>(new Set());
+  const [editModalOpen, setEditModalOpen] = useState(false);
+  const [editTargetId, setEditTargetId] = useState<number | null>(null);
+  const [editContent, setEditContent] = useState('');
+  const [editLoading, setEditLoading] = useState(false);
+  const [sortBy, setSortBy] = useState<'latest' | 'most_liked'>('latest');
 
   useEffect(() => {
     fetchPosts();
     if (user) {
       loadStats(user.user_id);
+      loadLikedPosts(user.user_id);
     }
   }, [user]);
+
+  const loadLikedPosts = async (userId: number) => {
+    try {
+      const likedPosts = await getLikedPostsByUser(userId);
+      setLikedPostIds(new Set(likedPosts.map((post) => post.post_id)));
+    } catch (error) {
+      console.error('좋아요한 게시글 불러오기 실패:', error);
+    }
+  };
 
   const handleCreate = async () => {
     if (!content.trim()) return;
@@ -68,6 +85,30 @@ function App() {
     }
   };
 
+  const handleEditClick = (post_id: number, content: string) => {
+    setEditTargetId(post_id);
+    setEditContent(content);
+    setEditModalOpen(true);
+  };
+
+  const handleEditConfirm = async (newContent: string) => {
+    if (!editTargetId) return;
+
+    setEditLoading(true);
+    try {
+      await updatePost(editTargetId, newContent);
+      await fetchPosts();
+      setEditModalOpen(false);
+      setEditTargetId(null);
+      setEditContent('');
+      showSuccess('게시물이 수정되었습니다.');
+    } catch (error) {
+      showError(error, '게시물 수정에 실패했습니다.');
+    } finally {
+      setEditLoading(false);
+    }
+  };
+
   const handleStatsClick = (type: 'followers' | 'following') => {
     setModalType(type);
     setModalOpen(true);
@@ -76,6 +117,16 @@ function App() {
   const handleFollowChange = async () => {
     await Promise.all([fetchPosts(), user && loadStats(user.user_id)]);
   };
+
+  // Sort posts based on selected filter
+  const sortedPosts = [...posts].sort((a, b) => {
+    if (sortBy === 'latest') {
+      return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+    } else {
+      // most_liked
+      return b.like_count - a.like_count;
+    }
+  });
 
   return (
     <div className="min-h-screen bg-gray-900">
@@ -109,25 +160,52 @@ function App() {
           </div>
         )}
 
+        {/* Filter Tabs */}
+        <div className="border-b border-gray-800 flex sticky top-[73px] bg-gray-900 z-10">
+          <button
+            onClick={() => setSortBy('latest')}
+            className={`flex-1 py-4 text-center font-semibold transition-colors ${
+              sortBy === 'latest'
+                ? 'text-white border-b-2 border-blue-500'
+                : 'text-gray-500 hover:text-gray-300'
+            }`}
+          >
+            최신순
+          </button>
+          <button
+            onClick={() => setSortBy('most_liked')}
+            className={`flex-1 py-4 text-center font-semibold transition-colors ${
+              sortBy === 'most_liked'
+                ? 'text-white border-b-2 border-blue-500'
+                : 'text-gray-500 hover:text-gray-300'
+            }`}
+          >
+            좋아요순
+          </button>
+        </div>
+
         {/* Posts Feed */}
         <div className="divide-y divide-gray-800">
-          {posts.map((post) => (
+          {sortedPosts.map((post) => (
             <PostCard
               key={post.post_id}
               post={post}
               currentUserId={user?.user_id}
               showFollowButton={true}
               showDeleteButton={true}
+              showEditButton={true}
               onDelete={handleDeleteClick}
+              onEdit={handleEditClick}
               onFollowChange={{
                 fetchPosts,
                 loadStats: () => user && loadStats(user.user_id),
               }}
+              isLikedByUser={likedPostIds.has(post.post_id)}
             />
           ))}
         </div>
 
-        {posts.length === 0 && (
+        {sortedPosts.length === 0 && (
           <div className="text-center py-20 text-gray-500">
             <p className="text-xl">아직 게시물이 없습니다</p>
             <p className="mt-2">첫 번째 게시물을 작성해보세요!</p>
@@ -151,6 +229,13 @@ function App() {
         onClose={() => setDeleteModalOpen(false)}
         onConfirm={handleDeleteConfirm}
         loading={deleteLoading}
+      />
+      <EditPostModal
+        isOpen={editModalOpen}
+        onClose={() => setEditModalOpen(false)}
+        onConfirm={handleEditConfirm}
+        initialContent={editContent}
+        loading={editLoading}
       />
     </div>
   );

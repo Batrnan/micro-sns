@@ -7,12 +7,15 @@ import {
   getFollowingList,
   type Post,
   deletePost,
+  updatePost,
   followUser,
   unfollowUser,
+  getLikedPostsByUser,
 } from '@/lib/api';
 import { Button } from '@/components/ui/button';
 import { FollowListModal } from '@/components/common/FollowListModal';
 import { DeleteConfirmModal } from '@/components/common/DeleteConfirmModal';
+import { EditPostModal } from '@/components/common/EditPostModal';
 import { UserAvatar } from '@/components/common/UserAvatar';
 import { PostCard } from '@/components/common/PostCard';
 import { BackIcon } from '@/components/icons';
@@ -39,6 +42,13 @@ export default function ProfilePage() {
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [deleteTargetId, setDeleteTargetId] = useState<number | null>(null);
   const [deleteLoading, setDeleteLoading] = useState(false);
+  const [likedPostIds, setLikedPostIds] = useState<Set<number>>(new Set());
+  const [activeTab, setActiveTab] = useState<'posts' | 'liked'>('posts');
+  const [likedPosts, setLikedPosts] = useState<Post[]>([]);
+  const [editModalOpen, setEditModalOpen] = useState(false);
+  const [editTargetId, setEditTargetId] = useState<number | null>(null);
+  const [editContent, setEditContent] = useState('');
+  const [editLoading, setEditLoading] = useState(false);
 
   const handleDeleteClick = (post_id: number) => {
     setDeleteTargetId(post_id);
@@ -59,6 +69,30 @@ export default function ProfilePage() {
       showError(error, '게시물 삭제에 실패했습니다.');
     } finally {
       setDeleteLoading(false);
+    }
+  };
+
+  const handleEditClick = (post_id: number, content: string) => {
+    setEditTargetId(post_id);
+    setEditContent(content);
+    setEditModalOpen(true);
+  };
+
+  const handleEditConfirm = async (newContent: string) => {
+    if (!editTargetId) return;
+
+    setEditLoading(true);
+    try {
+      await updatePost(editTargetId, newContent);
+      await loadProfileData();
+      setEditModalOpen(false);
+      setEditTargetId(null);
+      setEditContent('');
+      showSuccess('게시물이 수정되었습니다.');
+    } catch (error) {
+      showError(error, '게시물 수정에 실패했습니다.');
+    } finally {
+      setEditLoading(false);
     }
   };
 
@@ -141,6 +175,21 @@ export default function ProfilePage() {
         const followingList = await getFollowingList(currentUser.user_id);
         const isFollowing = followingList.some((u) => u.user_id === userIdNum);
         setIsFollowingUser(isFollowing);
+      }
+
+      // Load liked posts for current user
+      if (currentUser) {
+        try {
+          const likedPostsData = await getLikedPostsByUser(currentUser.user_id);
+          setLikedPostIds(new Set(likedPostsData.map((post) => post.post_id)));
+
+          // If viewing own profile, also load liked posts for display
+          if (currentUser.user_id === userIdNum) {
+            setLikedPosts(likedPostsData);
+          }
+        } catch (error) {
+          console.error('좋아요한 게시글 불러오기 실패:', error);
+        }
       }
     } catch (error) {
       console.error('프로필 데이터 로드 실패:', error);
@@ -282,23 +331,75 @@ export default function ProfilePage() {
           </div>
         </div>
 
+        {/* Tabs - Only show for own profile */}
+        {isOwnProfile && (
+          <div className="border-b border-gray-800 flex">
+            <button
+              onClick={() => setActiveTab('posts')}
+              className={`flex-1 py-4 text-center font-semibold transition-colors ${
+                activeTab === 'posts'
+                  ? 'text-white border-b-2 border-blue-500'
+                  : 'text-gray-500 hover:text-gray-300'
+              }`}
+            >
+              내 게시글
+            </button>
+            <button
+              onClick={() => setActiveTab('liked')}
+              className={`flex-1 py-4 text-center font-semibold transition-colors ${
+                activeTab === 'liked'
+                  ? 'text-white border-b-2 border-blue-500'
+                  : 'text-gray-500 hover:text-gray-300'
+              }`}
+            >
+              좋아요한 게시글
+            </button>
+          </div>
+        )}
+
         {/* Posts */}
         <div className="divide-y divide-gray-800">
-          {posts.length === 0 ? (
-            <div className="text-center py-20 text-gray-500">
-              <p className="text-xl">아직 게시물이 없습니다</p>
-            </div>
-          ) : (
-            posts.map((post) => (
-              <div key={post.post_id} className="p-4">
-                <PostCard
-                  post={post}
-                  currentUserId={currentUser?.user_id}
-                  showDeleteButton={isOwnProfile}
-                  onDelete={handleDeleteClick}
-                />
+          {activeTab === 'posts' ? (
+            posts.length === 0 ? (
+              <div className="text-center py-20 text-gray-500">
+                <p className="text-xl">아직 게시물이 없습니다</p>
               </div>
-            ))
+            ) : (
+              posts.map((post) => (
+                <div key={post.post_id} className="px-4">
+                  <PostCard
+                    post={post}
+                    currentUserId={currentUser?.user_id}
+                    showDeleteButton={isOwnProfile}
+                    showEditButton={isOwnProfile}
+                    onDelete={handleDeleteClick}
+                    onEdit={handleEditClick}
+                    isLikedByUser={likedPostIds.has(post.post_id)}
+                  />
+                </div>
+              ))
+            )
+          ) : (
+            likedPosts.length === 0 ? (
+              <div className="text-center py-20 text-gray-500">
+                <p className="text-xl">좋아요한 게시물이 없습니다</p>
+                <p className="mt-2">마음에 드는 게시물에 좋아요를 눌러보세요!</p>
+              </div>
+            ) : (
+              likedPosts.map((post) => (
+                <div key={post.post_id} className="px-4">
+                  <PostCard
+                    post={post}
+                    currentUserId={currentUser?.user_id}
+                    showDeleteButton={currentUser?.user_id === post.author_id}
+                    showEditButton={currentUser?.user_id === post.author_id}
+                    onDelete={handleDeleteClick}
+                    onEdit={handleEditClick}
+                    isLikedByUser={true}
+                  />
+                </div>
+              ))
+            )
           )}
         </div>
       </div>
@@ -317,6 +418,13 @@ export default function ProfilePage() {
         onClose={() => setDeleteModalOpen(false)}
         onConfirm={handleDeleteConfirm}
         loading={deleteLoading}
+      />
+      <EditPostModal
+        isOpen={editModalOpen}
+        onClose={() => setEditModalOpen(false)}
+        onConfirm={handleEditConfirm}
+        initialContent={editContent}
+        loading={editLoading}
       />
     </div>
   );

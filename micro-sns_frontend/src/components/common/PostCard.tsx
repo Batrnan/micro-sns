@@ -1,20 +1,26 @@
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { type Post } from '@/lib/api';
 import { formatTimeAgo } from '@/lib/utils';
 import { UserAvatar } from './UserAvatar';
-import { DeleteIcon, CommentIcon, HeartIcon } from '@/components/icons';
+import { DeleteIcon, CommentIcon, HeartIcon, EditIcon } from '@/components/icons';
 import { FollowButton } from './FollowButton';
+import { CommentSection } from './CommentSection';
+import { useLike } from '@/hooks';
 
 interface PostCardProps {
   post: Post;
   currentUserId?: number;
   showFollowButton?: boolean;
   showDeleteButton?: boolean;
+  showEditButton?: boolean;
   onDelete?: (postId: number) => void;
+  onEdit?: (postId: number, content: string) => void;
   onFollowChange?: {
     fetchPosts: () => void;
     loadStats: () => void;
   };
+  isLikedByUser?: boolean;
 }
 
 export function PostCard({
@@ -22,10 +28,20 @@ export function PostCard({
   currentUserId,
   showFollowButton = false,
   showDeleteButton = false,
+  showEditButton = false,
   onDelete,
+  onEdit,
   onFollowChange,
+  isLikedByUser = false,
 }: PostCardProps) {
   const navigate = useNavigate();
+  const [showComments, setShowComments] = useState(false);
+  const { likeCount, isLiked, isLoading, toggleLike } = useLike(
+    post.post_id,
+    post.like_count,
+    currentUserId,
+    isLikedByUser
+  );
 
   const handleAuthorClick = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -39,9 +55,23 @@ export function PostCard({
     }
   };
 
+  const handleEditClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (onEdit) {
+      onEdit(post.post_id, post.content);
+    }
+  };
+
+  const handleLikeClick = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!currentUserId) return;
+    await toggleLike();
+  };
+
   const isOwnPost = currentUserId === post.author_id;
   const shouldShowFollow = showFollowButton && currentUserId && !isOwnPost;
   const shouldShowDelete = showDeleteButton && isOwnPost;
+  const shouldShowEdit = showEditButton && isOwnPost;
 
   return (
     <div className="py-4 transition-colors">
@@ -63,14 +93,57 @@ export function PostCard({
               </span>
             </div>
 
-            <div className="flex items-center gap-2">
-              {shouldShowFollow && onFollowChange && (
-                <FollowButton
-                  key={`${post.author_id}-${currentUserId}`}
-                  currentUserId={currentUserId}
-                  targetUserId={post.author_id}
-                  onFollowChange={onFollowChange}
-                />
+            {shouldShowFollow && onFollowChange && (
+              <FollowButton
+                key={`${post.author_id}-${currentUserId}`}
+                currentUserId={currentUserId}
+                targetUserId={post.author_id}
+                onFollowChange={onFollowChange}
+              />
+            )}
+          </div>
+
+          <p className="text-white mt-1 text-[15px] leading-normal whitespace-pre-wrap break-words">
+            {post.content}
+          </p>
+
+          {/* Action Buttons */}
+          <div className="flex items-center justify-between mt-3 pt-2">
+            <div className="flex items-center gap-1">
+              <button
+                onClick={() => setShowComments(!showComments)}
+                className={`flex items-center gap-1 transition-colors group ${
+                  showComments ? 'text-blue-500' : 'text-gray-500 hover:text-blue-500'
+                }`}
+              >
+                <div className="group-hover:bg-blue-500/10 rounded-full p-2 transition-colors">
+                  <CommentIcon />
+                </div>
+              </button>
+
+              <button
+                onClick={handleLikeClick}
+                disabled={isLoading || !currentUserId}
+                className={`flex items-center gap-1 transition-colors group ${
+                  isLiked ? 'text-red-500' : 'text-gray-500 hover:text-red-500'
+                } ${!currentUserId ? 'cursor-not-allowed opacity-50' : ''}`}
+              >
+                <div className="group-hover:bg-red-500/10 rounded-full p-2 transition-colors">
+                  <HeartIcon filled={isLiked} />
+                </div>
+                <span className="text-sm">{likeCount}</span>
+              </button>
+            </div>
+
+            <div className="flex items-center gap-1">
+              {shouldShowEdit && (
+                <button
+                  onClick={handleEditClick}
+                  className="text-gray-500 hover:text-blue-500 hover:bg-blue-500/10 rounded-full p-2 transition-colors"
+                  aria-label="수정"
+                >
+                  <EditIcon />
+                </button>
               )}
 
               {shouldShowDelete && (
@@ -85,23 +158,10 @@ export function PostCard({
             </div>
           </div>
 
-          <p className="text-white mt-1 text-[15px] leading-normal whitespace-pre-wrap break-words">
-            {post.content}
-          </p>
-
-          {/* Action Buttons */}
-          <div className="flex justify-end gap-4 mt-3 text-gray-500">
-            <button className="flex items-center gap-2 hover:text-blue-500 transition-colors group">
-              <div className="group-hover:bg-blue-500/10 rounded-full p-2 transition-colors">
-                <CommentIcon />
-              </div>
-            </button>
-            <button className="flex items-center gap-2 hover:text-red-500 transition-colors group">
-              <div className="group-hover:bg-red-500/10 rounded-full p-2 transition-colors">
-                <HeartIcon />
-              </div>
-            </button>
-          </div>
+          {/* Comment Section */}
+          {showComments && (
+            <CommentSection postId={post.post_id} currentUserId={currentUserId} />
+          )}
         </div>
       </div>
     </div>

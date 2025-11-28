@@ -1,12 +1,13 @@
 interface IconProps {
   className?: string;
+  filled?: boolean;
 }
 
-export function HeartIcon({ className = 'w-4 h-4' }: IconProps) {
+export function HeartIcon({ className = 'w-4 h-4', filled = false }: IconProps) {
   return (
     <svg
       className={className}
-      fill="none"
+      fill={filled ? 'currentColor' : 'none'}
       stroke="currentColor"
       viewBox="0 0 24 24"
     >
