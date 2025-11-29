@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { changePassword } from "@/lib/api"; 
+import { changePassword } from "@/lib/api";
 import { showError, showSuccess } from "@/lib/utils";
 
 export default function ChangePasswordPage() {
@@ -7,6 +7,17 @@ export default function ChangePasswordPage() {
   const [newPw, setNewPw] = useState("");
   const [confirmPw, setConfirmPw] = useState("");
   const [loading, setLoading] = useState(false);
+
+  // 로그인 시 저장된 사용자 정보 가져오기
+  const user = JSON.parse(localStorage.getItem("user") || "null");
+
+  if (!user) {
+    return (
+      <div className="min-h-screen flex items-center justify-center text-white text-lg">
+        로그인 정보가 없습니다. 다시 로그인해주세요.
+      </div>
+    );
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -18,8 +29,11 @@ export default function ChangePasswordPage() {
 
     setLoading(true);
     try {
-      await changePassword(currentPw, newPw);
-      showSuccess("비밀번호가 변경되었습니다!");
+      // ✔ user.user_id 필수!
+      await changePassword(user.user_id, currentPw, newPw);
+
+      showSuccess("비밀번호가 성공적으로 변경되었습니다!");
+
       setCurrentPw("");
       setNewPw("");
       setConfirmPw("");
@@ -39,7 +53,8 @@ export default function ChangePasswordPage() {
         </h2>
 
         <form onSubmit={handleSubmit} className="space-y-5">
-
+          
+          {/* 기존 비밀번호 */}
           <div>
             <label className="text-sm text-gray-300 mb-1 block">현재 비밀번호</label>
             <input
@@ -49,9 +64,11 @@ export default function ChangePasswordPage() {
               className="w-full px-4 py-2 bg-gray-700 text-white rounded-lg 
                          focus:ring-2 focus:ring-blue-500 outline-none"
               placeholder="현재 비밀번호"
+              required
             />
           </div>
 
+          {/* 새 비밀번호 */}
           <div>
             <label className="text-sm text-gray-300 mb-1 block">새 비밀번호</label>
             <input
@@ -61,9 +78,11 @@ export default function ChangePasswordPage() {
               className="w-full px-4 py-2 bg-gray-700 text-white rounded-lg
                          focus:ring-2 focus:ring-blue-500 outline-none"
               placeholder="새 비밀번호"
+              required
             />
           </div>
 
+          {/* 새 비밀번호 확인 */}
           <div>
             <label className="text-sm text-gray-300 mb-1 block">새 비밀번호 확인</label>
             <input
@@ -73,9 +92,11 @@ export default function ChangePasswordPage() {
               className="w-full px-4 py-2 bg-gray-700 text-white rounded-lg
                          focus:ring-2 focus:ring-blue-500 outline-none"
               placeholder="새 비밀번호 확인"
+              required
             />
           </div>
 
+          {/* 버튼 */}
           <button
             type="submit"
             disabled={loading}

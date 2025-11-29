@@ -199,15 +199,10 @@ export async function searchUsers(keyword: string) {
   return res.data.data;
 }
 
-export async function changePassword(
-  user_id: number,
-  oldPassword: string,
-  newPassword: string
-) {
-  const res = await api.post("/users/change-password", {
+export async function changePassword(user_id: number, oldPw: string, newPw: string) {
+  return api.post("/users/change-password", {
     user_id,
-    oldPassword,
-    newPassword,
+    oldPassword: oldPw,
+    newPassword: newPw,
   });
-  return res.data;
 }
