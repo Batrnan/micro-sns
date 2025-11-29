@@ -1,4 +1,5 @@
 USE micro_sns;
+-- User table
 CREATE TABLE User (
     user_id INT AUTO_INCREMENT PRIMARY KEY,
     name VARCHAR(50) NOT NULL,
@@ -7,6 +8,7 @@ CREATE TABLE User (
     bio TEXT,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
+-- Post table
 CREATE TABLE Post (
     post_id INT AUTO_INCREMENT PRIMARY KEY,
     user_id INT NOT NULL,
@@ -14,9 +16,11 @@ CREATE TABLE Post (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP NULL,
     FOREIGN KEY (user_id) REFERENCES User(user_id)
-    ALTER TABLE post
-    ADD COLUMN image_url VARCHAR(255) NULL;
 );
+-- Add image_url AFTER creating Post table
+ALTER TABLE Post
+ADD COLUMN image_url VARCHAR(255) NULL;
+-- Likes table
 CREATE TABLE Likes (
     user_id INT NOT NULL,
     post_id INT NOT NULL,
@@ -25,6 +29,7 @@ CREATE TABLE Likes (
     FOREIGN KEY (user_id) REFERENCES User(user_id),
     FOREIGN KEY (post_id) REFERENCES Post(post_id)
 );
+-- Follow table
 CREATE TABLE Follow (
     follower_id INT NOT NULL,
     following_id INT NOT NULL,
@@ -33,6 +38,7 @@ CREATE TABLE Follow (
     FOREIGN KEY (follower_id) REFERENCES User(user_id),
     FOREIGN KEY (following_id) REFERENCES User(user_id)
 );
+-- Comment table
 CREATE TABLE Comment (
     comment_id INT AUTO_INCREMENT PRIMARY KEY,
     post_id INT NOT NULL,
