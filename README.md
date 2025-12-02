@@ -1,4 +1,4 @@
-📌 micro-sns  
+# 📌 micro-sns  
 React + Node.js + MySQL 기반의 간단한 SNS 풀스택 프로젝트입니다.
 회원가입부터 게시글, 댓글, 좋아요, 팔로우, 검색까지 SNS의 핵심 기능을 모두 구현했습니다.
 
