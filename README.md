@@ -219,3 +219,7 @@ ORDER BY p.created_at DESC;
 | 댓글 조회   | Comment    | `GET /api/comments/by-post/:id`    |
 | 팔로우 추가  | Follow     | `POST /api/follows`                |
 | 사용자 검색  | User       | `GET /api/users/search?keyword=xx` |
+
+---
+📹 Demo video
+https://github.com/user-attachments/assets/a53a25a8-73ad-42b8-a12d-ba96240fb495
