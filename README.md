@@ -1,10 +1,10 @@
-### 📌 micro-sns  
+# 📌 micro-sns  
 React + Node.js + MySQL 기반의 간단한 SNS 풀스택 프로젝트입니다.
 회원가입부터 게시글, 댓글, 좋아요, 팔로우, 검색까지 SNS의 핵심 기능을 모두 구현했습니다.
 
 ---
 
-## 🚀 주요 기능 (Full List)  
+### 🚀 주요 기능 (Full List)  
 
 🔐 사용자(User) 기능  
 회원가입  
@@ -51,7 +51,7 @@ React + Node.js + MySQL 기반의 간단한 SNS 풀스택 프로젝트입니다.
 
 ---
 
-## 🛠 기술 스택  
+### 🛠 기술 스택  
 Frontend  
 React (Vite)  
 TypeScript  
@@ -65,7 +65,7 @@ MySQL
 Multer (이미지 업로드)  
 RESTful API 설계  
 
-## 📦 환경 변수 설정 (.env)  
+### 📦 환경 변수 설정 (.env)  
 Backend (.env)  
 DB_HOST=localhost  
 DB_USER=root  
@@ -77,7 +77,7 @@ VITE_API_URL=http://localhost:3001
 
 ---  
 
-## 📂 데이터베이스 ERD  
+### 📂 데이터베이스 ERD  
 <img width="2173" height="1638" alt="image" src="https://github.com/user-attachments/assets/9b0d80d3-33ec-4488-9b5d-9de76ebd59c6" />  
   
 Database Schema Overview
@@ -142,7 +142,7 @@ CREATE TABLE Follow (
     FOREIGN KEY (following_id) REFERENCES User(user_id) ON DELETE CASCADE
 );
 
-🛠 주요 SQL 쿼리  
+### 🛠 주요 SQL 쿼리  
 
 전체 사용자 조회  
 SELECT * FROM User;
@@ -203,7 +203,7 @@ WHERE p.user_id IN (
 ORDER BY p.created_at DESC;
 
 ---
-기능별 백엔드 API 구조 (DB 기반)
+### 기능별 백엔드 API 구조 (DB 기반)
 | 기능      | 관련 테이블     | API 경로                             |
 | ------- | ---------- | ---------------------------------- |
 | 회원가입    | User       | `POST /api/users/register`         |
